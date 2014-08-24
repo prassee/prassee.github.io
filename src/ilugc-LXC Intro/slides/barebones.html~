@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>CPS (Continuation Passing Style) in Scala</title>
+        <link rel="stylesheet" href="reveal.min.css">
+        <link rel="stylesheet" href="default.css" id="theme">
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <script>
+            document.write('<link rel="stylesheet" href="'
+                    + (window.location.search.match(/print-pdf/gi) ? 'pdf' : 'pdf')
+                    + '.css" type="text/css" media="print">');
+        </script>
+    </head>
+
+    <body>
+        <div class="reveal">
+            <div class="slides">
+
+                <section>
+                    <h2>LXC - Linux Containers</h2>
+                    <h3>an introduction</h3>
+                    <p><b>ILUGC</b> Meetup, 08/03/14</p>
+                </section>
+
+                <section>
+                    <h2 id="martin-odersky">What is LXC </h2>
+                    <ul>
+                        <li>- a simple virtualization toolbox built on Linux</li>
+                        <li>- create isolated linux environments with in your linux desktop</li>
+                        <li>- all modern linux kernels support creating containers</li>
+                        <li>- uses underlying OS kernel</li>
+                    </ul>
+                </section>
+
+
+                <section>
+                    <h2 id="controls">Why this session</h2>
+                    <ul>
+                        <li>- give an introduction to LXC </li>
+                        <li>- learn my self LXC and show your</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 id="exceptions">What this session covers</h2>
+                    <ul>
+                        <li>- installing & configuring host and guest</li>
+                        <li>- basic lxc operations</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 id="string-interpolation">What this session does not cover</h2>
+                    <ul>
+                        <li>    - Cgroups</li>
+                        <li>	- network configuration between host and guest</li>
+                        <li>	- every detail of internal configuration </li>
+                        <li>	- automating lxc </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 id="type-system">Installing LXC</h2>
+                    <ul>
+                        <li> <i> - sudo apt-get install lxc </i> </li>
+                        <li>all lxc commands could be executed with sudo permissions </li>
+                    </ul>
+                </section>
+
+
+                <section>
+                    <h2 id="type-system-contd">How to create LXC</h2>
+                    <UL>                            
+			<li><i> sudo lxc-create -n ubuntu-container -t ubuntu </i></li>
+			<li>-n name of container</li>
+                        <li> -t templates there are many templates available like ubuntu , redhat etc.</li>
+                    </UL>                        
+                </section>
+
+                <section>
+                    <h2>Listing all lxc </h2>
+                    <ul>
+                        <li> <i> sudo lxc-list </i> </li>
+                           <li> list all the created lxc's </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Starting & logging to created lxc</h2>
+                    <ul>
+			<li><i>sudo lxc-start --name ubuntu-container </i></li>
+                            <li><i>lxc-console --name ubuntu-container </i></li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Delete a already created lxc</h2>
+                    <ul><li><i>sudo lxc-destroy --name ubuntu-container</i></li></ul>
+                </section>
+
+                <section>
+                    <h2> Know about your lxc </h2>
+                    <ul><li><i>sudo lxc-info --name ubuntu-container</i></li></ul>
+                </section>
+
+                <section>
+                    <h2>Cloning your existing lxc </h2>
+                    <ul>
+                        <li><i>sudo lxc-clone -o ubuntu-container -n ubuntu-java-container</i> </li>
+                        <li> -o old container name </li>
+                        <li> -n new container name</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Use cases for LXC </h2>
+                    <ul>
+                        <li>
+                            created isolated environments 
+                            <ul>
+                                <li>run & maintain your own git server</li>
+                                <li>run  your own build or CI tool</li>
+                                <li> experiment with multiple versions of anything on the same machine</li>
+                            </ul>
+                        </li>
+                        <li>- create your own virtual clusters for hadooop / distributed data processing project</li>
+                        <li>- Implementing PAAS solutions eg OpenShift, AppFog etc </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Having fun with LXC </h2>
+                    <ul>
+                        <li>lxc-webpanel - A webbased LXC admin console written in Python , 
+                            Flask remoting to create , edit and delete lxc on a machine</li>
+                        <li>Docker - a highly configurable , easy to manager console based tool to manage lxc's</li>
+                    </ul>
+                </section>
+
+                <section data-transition="zoom">
+                    <h1>Questions ?</h1>
+                </section>
+
+                <section>
+                    <h2 id="language-features">About me</h2>
+                    <ul>
+                        <li>Prasanna Kumar</li>
+                        <li>
+                            Contact
+                            <ul>
+                                <li>prassee dot sathian at gmail dot com</li>
+                                <li> @prassee </li>
+                            </ul>
+                        </li>
+                        <li>a Scala & Java Programmer</li>
+                        <li>a part time Linux geek</li>
+                    </ul>
+                </section>
+
+
+                <section data-transition="zoom">
+                    <h1>Thanks :-)</h1>
+                </section>
+
+            </div>
+        </div>
+
+        <script src="reveal.min.js"></script>
+        <script>
+            Reveal.initialize();
+        </script>
+    </body>

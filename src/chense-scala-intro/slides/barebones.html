@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>CPS (Continuation Passing Style) in Scala</title>
+        <link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/10783650/mytalks/slides/reveal.min.css">
+        <link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/10783650/mytalks/slides/default.css" id="theme">
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link
+            href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800'
+            rel='stylesheet' type='text/css'>
+        <script>
+            document.write('<link rel="stylesheet" href="'
+                    + (window.location.search.match(/print-pdf/gi) ? 'pdf' : 'pdf')
+                    + '.css" type="text/css" media="print">');
+        </script>
+    </head>
+
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                    
+                <section>
+                    <h2><b>Introduction to Scala</b></h2>
+                    <p><b>ILUGC</b> Meetup, 18/01/14</p>
+                </section>
+                
+                <section>
+                    <h2 id="martin-odersky">Martin Odersky</h2>
+                    <ul>
+                        <li>worked on Pizza, GJ, Java generics and javac</li>
+                        <li>in 2003 he wrote "Programming in Scala"</li>
+                        <li>with his company, Typesafe he continue to support and improve Scala</li>
+                        <li>current Scala version is 2.10 (01.2013)</li>
+                    </ul>
+                </section>
+
+                <section><h2 id="language-features">Language Features</h2>
+                    <ul>
+                        <li>you can choose between values (immutable) and variables (mutable)</li>
+                        <li>immutable values are preferred, as mutability is rarely needed</li>
+                        <li>lazy values are initialized on first access, then value is stored</li>
+                    </ul>
+                    <pre><code>// variable
+var name = &quot;Jerzy&quot;
+name = &quot;John&quot;
+
+// immutable value, cannot be changed
+val age = 24
+
+// does not compile
+// age = 15
+
+// lazy initialization
+lazy val x = someExpensiveComputation()
+</code></pre>
+                </section>
+
+                <section>
+                    <h2 id="controls">Controls</h2>
+                    <ul>
+                        <li>everything returns a value</li>
+                        <li>only sometimes this value is Unit (something like void in java)</li>
+                    </ul>
+                    <pre><code>// conditionals return values
+def abs(x: Double) = if (x &gt;= 0) x else -x
+
+val matrix = Seq(Seq(1, 2, 3), Seq(4, 5, 6), Seq(7, 8, 9))
+
+// simple for loop
+for (i &lt;- 1 to 10 by 2) print(i)
+
+// for comprehensions
+for {
+    row &lt;- matrix
+    number &lt;- row
+    if number % 2 == 0
+} {
+    println(number)
+}
+
+// loops also returns values (if we want them to)
+val squares = for (i &lt;- 1 to 100) yield i * i
+</code></pre></section>
+
+                <section><h2 id="exceptions">Exceptions</h2>
+                    <ul>
+                        <li>all exceptions are unchecked</li>
+                    </ul>
+                    <pre><code>import java.io.{IOException, File, PrintWriter}
+import java.util.Date
+
+val writer = new PrintWriter(new File(&quot;date.txt&quot;))
+
+// try/catch block also returns values
+val result = try {
+    writer.println(new Date)
+    &quot;success&quot;
+} catch {
+    case e: IOException =&gt; &quot;io exception&quot;
+    case e: Throwable =&gt; &quot;other exception&quot;
+} finally {
+    // we do not have catch an exception here
+    writer.close()
+}
+</code></pre>
+                </section>
+                <section><h2 id="string-interpolation">String interpolation</h2>
+                    <ul>
+                        <li>string concatenation made easy</li>
+                        <li>generic mechanism - you can define your own interpolators</li>
+                    </ul>
+                    <pre><code>val you = &quot;Jerzy&quot;
+
+s&quot;$you can compose messages ${&quot;much &quot; * 3}easier.&quot;
+
+raw&quot;$you can write regexes like this: C:\Users\$you\*&quot;
+</code></pre>
+                </section>
+                <section><h2 id="type-system">Type system</h2>
+                    <ul>
+                        <li>types are inferred almost everywhere!</li>
+                        <li>you can still provide types wherever you want to</li>
+                        <li>you have to provide types for method parameters</li>
+                        <li>and return types for recursive functions</li>
+                    </ul>
+                </section>
+                <section><h2 id="type-system-contd">Type system - contd</h2>
+                    <pre><code>// inferred type: String
+val name = &quot;John&quot;
+
+// inferred type: Map[String, Map[String, List[Int]]]
+var marks = Map(name -&gt;
+                Map(&quot;Geography&quot; -&gt; List(5, 6, 5),
+                    &quot;Biology&quot; -&gt; List(1, 2, 1)))
+
+// explicit parameter and return type needed
+def factorial(n: Int): Int =
+    if (n == 0) 1 else n * factorial(n - 1)
+</code></pre>
+                </section>
+                <section><h2 id="object-model">Object Model</h2></section>
+                <section><h2 id="classes">Classes</h2>
+                    <ul>
+                        <li>every value is an object</li>
+                    </ul>
+                    <pre><code>// primary constructor
+class Complex(val r: Double, val i: Double) {
+
+    // Auxiliary constructor
+    def this() {
+        this(0, 0)
+    }
+
+    // method - NOT an overloaded operator
+    def +(other: Complex) =
+        new Complex(this.r + other.r, this.i + other.i)
+
+    // override is necessary
+    override def toString = s&quot;Complex($r, $i)&quot;
+}
+
+val complex = new Complex(1, 2) // &gt; Complex(1, 2)
+
+// syntactic sugar for complex.+(new Complex(3, 4))
+complex + new Complex(3, 4) // &gt; Complex(4, 6)
+</code></pre></section>
+
+                <section><h2 id="objects">Objects</h2>
+                    <ul>
+                        <li>companion objects for "static" methods</li>
+                        <li>built-in singleton pattern</li>
+                    </ul>
+                    <pre><code>// class from previous slide
+class Complex(val r: Double, val i: Double) { /* ... */ }
+
+// companion object - place all &quot;static&quot; method here
+object Complex {
+    def create(r: Double, i: Double): Complex = new Complex(r, i)
+
+    val Zero = new Complex()
+}
+
+Complex.create(1, 2) // &gt; Complex(1, 2)
+
+Complex.Zero // &gt; Complex(0, 0)
+</code></pre></section>
+
+                <section><h2 id="inheritance-model">Inheritance model</h2>
+                    <ul>
+                        <li>single inheritance with Classes</li>
+                        <li>multiple inheritance with Traits</li>
+                        <li>super calls are linearized (no diamond problem)</li>
+                        <li>great solution for re-usage of behaviour</li>
+                    </ul>
+                </section>
+                <section>
+                    <h2 id="traits">Traits</h2>
+                    <ul>
+                        <li>interfaces with (partial) implementation</li>
+                    </ul>
+                    <pre><code>import java.util.logging.Logger
+
+trait Loggable {
+    val logger: Logger = Logging.getLogger(this)
+}
+
+abstract class BaseEntity {
+    // some important methods
+}
+
+class User extends BaseEntity with Loggable {
+    logger.info(&quot;User created!&quot;)
+}
+</code></pre>
+                </section>
+                <section><h2 id="case-classes-aka-algebraic-data-types">Case classes (A.K.A algebraic data types)</h2>
+                    <pre><code>classes on steroids!
+// Case class - we get toString, hashCode, equals,
+// copy constructor and static factory for free !
+case class Complex(r: Double, i: Double)
+
+val c = Complex(1, 2)
+c.i // &gt; 2
+
+c.toString // &gt; Complex(1, 2)
+
+c.copy(r = c.r + 2) == Complex(3, 2) // &gt; true
+</code></pre>
+                </section>
+                <section><h2 id="pattern-matching">Pattern matching</h2>
+                    <ul>
+                        <li>forget about chained conditions and switches</li>
+                    </ul>
+                    <pre><code>case class Person(firstName: String, lastName: String, age: Int)
+
+val aPerson: Person = ???
+
+val canDo = aPerson match {
+
+    // here we only care about Chuck Norris, and not his age -
+    // Chuck Norris is ageless
+    // Underscore in Scala usually means &quot;wildcard&quot; or
+    // &quot;we don't care about it&quot;
+    case Person(&quot;Chuck&quot;, &quot;Norris&quot;, _) =&gt; true
+
+    // matches only adults who are not Chuck Norris
+    case Person(_, _, age) if (age &gt;= 18) =&gt; true
+
+    // matches everything else
+    // if you leave it out you will get a MatchError
+    // for non-matching object
+    case _ =&gt; false
+}
+</code></pre>
+
+                </section>
+                <section>
+                    <h2 id="default-and-named-parameters">Default and named parameters</h2>
+                    <ul>
+                        <li>no more method chaining</li>
+                    </ul>
+                    <pre><code>// description has default value
+case class User(firstName: String,
+                lastName: String,
+                description: String = &quot;no description&quot;,
+                email: String)
+
+val user = User(email = &quot;jmuller@virtuslab.com&quot;,
+    firstName = &quot;Jerzy&quot;,
+    lastName = &quot;Müller&quot;)
+// &gt; User(Jerzy, Müller, no description, jmuller@virtuslab.com)
+</code></pre>
+                </section>
+                <section><h2 id="functions">Functions</h2>
+                    <ul>
+                        <li>First class citizens</li>
+                        <li>Each function is an object</li>
+                        <li>Functions can be stored in variables or passed as arguments</li>
+                    </ul>
+                </section>
+                <section>
+                    <h2 id="declaring-functions">Declaring functions</h2>
+                    <ul>
+                        <li>concise syntax for anonymous functions</li>
+                    </ul>
+                    <pre><code>// standard version for one parameter
+(x: Int) =&gt; x + 1
+
+// multiple parameters
+(x: Int, y: Int) =&gt; &quot;(&quot; + x + &quot;, &quot; + y + &quot;)&quot;
+
+// no parameters
+() =&gt; { System.getProperty(&quot;user.dir&quot;) }
+</code></pre>
+                </section> 
+
+                <section>
+                    <h2 id="functional-types">Functional types</h2>
+                    <pre><code>same syntax can be used for types
+// standard version for one parameter
+val inc: Int =&gt; Int =
+    (x: Int) =&gt; x + 1
+
+// multiple parameters
+val print: (Int, Int) =&gt; String =
+    (x: Int, y: Int) =&gt; &quot;(&quot; + x + &quot;, &quot; + y + &quot;)&quot;
+
+// no parameters
+val hello: () =&gt; String =
+    () =&gt; { System.getProperty(&quot;user.dir&quot;) }
+</code></pre>
+                </section>
+                <section><h2 id="implementation-of-functions">Implementation of functions</h2>
+                    <ul>
+                        <li>each function is translated to anonymous class</li>
+                    </ul>
+                    <pre><code>(i: Numeric) =&gt; i % 2 == 0
+
+// is translated into
+
+new Function1[Numeric, Boolean] {
+    // syntactic sugar, you can call apply() method using only ()
+    def apply(i: Numeric): Boolean = i % 2 == 0
+}
+</code></pre>
+                </section>
+                <section>
+                    <h2 id="functions-collections">Functions &amp; collections</h2>
+                    <ul>
+                        <li>Scala collections comes with huge amount of higher-order methods</li>
+                        <li>Each of these typically takes some function as parameter</li>
+                        <li>These methods offers concise syntax for very complex operations</li>
+                    </ul>
+                    <pre><code>case class User(name: String, age: Int)
+
+val users = List(User(&quot;Jerzy&quot;, 24), User(&quot;Kuba&quot;, 16))
+
+// split collection in two by predicate
+val (minors, adults) = users partition (user =&gt; user.age &lt; 18)
+
+// calc. squares of numbers divisible by 3 in range from 1 to 100
+val num = (1 to 100) filter (i =&gt; i % 3 == 0) map (i =&gt; i * i)
+
+// print result
+num foreach(i =&gt; println(i))
+
+// you can replace single appearance of parameter with _
+num foreach(println _)
+</code></pre>
+                </section>
+                
+                <section>
+                    <h2>Environment</h2>
+                    <ul>
+                        <li>Scala REPL</li>
+                        <li>IDES = Scala IDE, IntelliJ, Netbeans (all these 3 are open-sourced)</li>
+                        <li>SBT - (Scala Build Tool)</li>
+                    </ul>
+                </section>
+                
+                <section>
+                    <h2>About me</h2>
+                    <p>
+                        <a> <b>Prasanna Kumar</b> </a>
+                    </p>
+                    <p>A Java/Scala programmer</p>
+                    <ul>
+                        <li><p>find me <b>@prassee</b></p></li>
+                        <li>
+                            <p>
+                                mail me 
+                                <a><b><i>prassee dot sathian at gmail dot com</i></b>    
+                                </a>
+                            </p>
+                        </li>
+                        <li>
+                            <p>fork me in github <b>http://github.com/prassee</b></p>
+                        </li>
+                    </ul>
+                </section>
+
+                <section data-transition="zoom">
+                    <h1>Thanks :-)</h1>
+                </section>
+
+            </div>
+        </div>
+        <div style="position: absolute; bottom: 10px; right : 105%; margin-right: -140px">
+            <img src="https://dl.dropboxusercontent.com/u/10783650/mytalks/slides/chense_photo.jpg" alt=""> 
+        </div>
+
+        <script src="https://dl.dropboxusercontent.com/u/10783650/mytalks/slides/reveal.min.js"></script>
+        <script>
+            Reveal.initialize();
+        </script>
+    </body>

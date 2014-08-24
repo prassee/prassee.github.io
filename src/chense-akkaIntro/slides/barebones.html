@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Introduction to Akka</title>
+
+		<link rel="stylesheet" href="reveal.min.css">
+		
+		<link rel="stylesheet" href="default.css" id="theme">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+			<link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+		<script>
+			document.write( '<link rel="stylesheet" href="' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+		</script>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<div class="slides">
+
+				<section data-background="https://lh4.googleusercontent.com/-9Jdu2YwqpPE/AAAAAAAAAAI/AAAAAAAAAAQ/sgTvs_o-IwY/s80-c-k-no/photo.jpg" data-background-size="100px" data-background-position="top">
+					<h1>Akka</h1>
+					<p>Writing <b>'SCALA'</b> ble & concurrent code </p>
+					<i> CHENSE meetup ,  Aug 24 2013 </i>
+				</section>
+
+				
+				
+				 <section              data-background="https://lh4.googleusercontent.com/-9Jdu2YwqpPE/AAAAAAAAAAI/AAAAAAAAAAQ/sgTvs_o-IwY/s80-c-k-no/photo.jpg"
+                data-background-size="100px" data-background-position="top"> 
+					<h2>Agenda</h2> 
+					<ul>
+						<li>What is a concurrent system? </li>
+						<li>Paradigm </li>
+						<li>AKKA / Actors </li>
+						<li>My First Akka Code & Code walk through</li>
+						<li>Where & How could I use Akka?</li>
+						<li>Q&A </li>
+					</ul>
+                </section>
+
+				<section              data-background="https://lh4.googleusercontent.com/-9Jdu2YwqpPE/AAAAAAAAAAI/AAAAAAAAAAQ/sgTvs_o-IwY/s80-c-k-no/photo.jpg"
+                data-background-size="100px" data-background-position="top">
+
+					<section>
+							<h2>What is a concurrent system? </h2> 
+							<p>
+							<blockquote>
+							"Concurrency solves the problem of having scarce CPU resources and many tasks. So, you create threads or independent paths of execution through code in order to share time on the scarce resource"
+							</blockquote>
+						</p>
+						</section>
+					<section>
+						<h2>What is a concurrent system ? (Contd.) </h2> 
+					<p>
+						<small>
+						<ul>
+						<li> capable of doing as many tasks but only one task at a time </li>
+						<li> like our mind - human mind capability is infinite but we can do at most one task at a time </li>
+						<li> handle thread lock and manage resources very efficiently </li>
+						<li> great for writing scalable application </li>
+						</ul>
+						</small>
+					</p>
+					</section>
+					<section>
+						<h4> Example - "Gopher's Burning Problem" w/o concurrency </h4>
+						<img src='http://i.stack.imgur.com/C37MJ.jpg'>
+						</section>
+						<section>
+							<h4> Example - Helping Gophers with concurrency </h4>
+							
+							<img src='http://i.stack.imgur.com/w4HUK.jpg'>
+							<small>
+								Note : Multiple Gophers => Multicore CPU								
+							</small>
+						</section>
+						
+                </section>
+
+				<section              data-background="https://lh4.googleusercontent.com/-9Jdu2YwqpPE/AAAAAAAAAAI/AAAAAAAAAAQ/sgTvs_o-IwY/s80-c-k-no/photo.jpg"
+                data-background-size="100px" data-background-position="top">
+					<h2>Paradigm</h2>
+					<ul>
+						<li>actor - a concurrent abstraction much like our human mind </li>
+						<li>actors over threads to handle concurrency</li>
+						<li>communicate  through message passing (async/ sync)</li>
+						<li>let actors decide what task to pick up at any instant of time (take a deep breath)</li>
+					</ul>
+					
+				</section>
+
+
+				<section              data-background="https://lh4.googleusercontent.com/-9Jdu2YwqpPE/AAAAAAAAAAI/AAAAAAAAAAQ/sgTvs_o-IwY/s80-c-k-no/photo.jpg"
+                data-background-size="100px" data-background-position="top">
+					<h2>Actors <=> Akka</h2>
+					<ul>
+					<li>lightweight objects which handle message via case classes in Scala</li>
+					<li>use pattern matching to receive msgs</li>
+					<li>async in nature</li>
+					</ul>					
+				</section>
+				
+				<section              data-background="https://lh4.googleusercontent.com/-9Jdu2YwqpPE/AAAAAAAAAAI/AAAAAAAAAAQ/sgTvs_o-IwY/s80-c-k-no/photo.jpg"
+                data-background-size="100px" data-background-position="top">
+					<section>
+						<h2>Code Kata - My First Actor</h2>
+
+						<pre>
+							<code>
+	class Greeter extends Actor {
+	  var greeting = ""
+	  def receive = {
+	    case WhoToGreet(who) => {
+	      greeting = s"hello, $who"
+	      println(greeting)
+	    }
+	  }
+	}
+							</code>
+						</pre>
+					</section>
+					
+					<section              data-background="https://lh4.googleusercontent.com/-9Jdu2YwqpPE/AAAAAAAAAAI/AAAAAAAAAAQ/sgTvs_o-IwY/s80-c-k-no/photo.jpg"
+	                data-background-size="100px" data-background-position="top">
+						<h2>Code Kata - Writing Akka client</h2>
+						<pre><code>
+object HelloAkkaScala extends App {
+
+  // Create the 'helloakka' actor system
+  val system = ActorSystem("helloakka")
+
+  // Create the 'greeter' actor
+  val greeter = system.actorOf(Props[Greeter], "greeter")
+
+  greeter.!(WhoToGreet("first message"))
+
+  system.shutdown()
+}
+						</code></pre>
+					</section>
+					
+					<section><h2>Let's get Real  !!!</h2></section>
+					
+				</section>
+				
+				<section              data-background="https://lh4.googleusercontent.com/-9Jdu2YwqpPE/AAAAAAAAAAI/AAAAAAAAAAQ/sgTvs_o-IwY/s80-c-k-no/photo.jpg"
+                data-background-size="100px" data-background-position="top">
+					<h2>Where & How could I use Akka ? </h2>
+
+					<ul>	<li>concurrent applications
+						</li>
+						<li>modeling concurrency 
+						</li>
+						<li>clustered message processing
+				</li></ul>
+				
+			</section>
+			
+			
+			<section>
+				
+				
+				<h1>Q & A</h1>
+				
+				
+				
+			</section>
+			
+			<section>
+				<h4>Session Where abouts</h4>
+				<p>
+					Source :-
+					https://github.com/prassee/hello-akka					
+				</p>					
+				<p>
+					Chense G+ page https://plus.google.com/communities/100102886005161141056
+				</p>
+				
+				<p>
+					&nbsp;
+				</p>
+				
+				<h1> -> Thanks <-</h1>
+			</section>
+				
+			</div>
+
+		</div>
+		<!--
+		<script src="../lib/js/head.min.js"></script>
+	-->
+		<script src="reveal.min.js"></script>
+
+		<script>
+
+			Reveal.initialize();
+
+		</script>
+		
+		
+		
+	</body>
+</html>

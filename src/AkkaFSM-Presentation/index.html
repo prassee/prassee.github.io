@@ -1,0 +1,266 @@
+
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+		<title>Finite State Machines (FSM) with Akka Actors writing and testing 'em lightning talk by Prasanna</title>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h2><b>Finite State Machines (FSM)</b> </h2>
+					<h2>with <b>Akka Actors</b></h2>
+					<h4>writing and unit testing 'em </h4>
+					<p>
+					<h5> "lightning talk" by <a href="http://blog.prassee.me">Prasanna Kumar</a> </h5>
+					<!--					
+					<h5> Twitter  <a href="http://twitter.com/prassee">@prassee</a> </h5>
+					-->					
+					<h5><b> Glassbeam </b></h5>
+					</p>
+				</section>
+
+				<section>
+					<h2>What is FSM?</h2>					
+					<blockquote>
+						"When a program is in a state S and an event E occurs then do an action A and change to another state S1"
+					</blockquote>
+					<p>If the above sounds too theoritical to understand ....<p>						
+				</section>
+				
+				<section>
+					<h2>Imagine a traffic signal</h2>
+					<p> hope you could understand !!! </p>					
+				</section>
+				<section>
+					<h2> Why do we need FSM? </h2>
+					<ul>
+						<li> Model and Execute Constraints
+						</li>
+						<li> Simulations</li>
+						<li> Automata based programming </li>					
+					</ul>					
+				</section>
+<!--        
+	<section>
+          <h3>Why this presentation</h3>
+          <p>
+            <li> I want to learn FSM </li>
+          </p>  
+        </section>			
+-->	
+				<section>
+				  <h3>"FSM" from Akka Perspective</h3>
+				  <ul>
+				    <li>State</li>
+				    <li>Data</li>
+				    <li>Messages to the actor is analogous to Events</li>
+				    <li>Actor abstraction itself</li>
+				  </ul>
+				  <pre>
+<code>
+  sealed trait FSMSignal
+  
+  case class SignalColorData
+  
+  class SignalChangeFSMActor extends Actor 
+    with FSM[FSMSignal, SignalColorData] {
+    ..... 
+  }
+</code>
+				  </pre>
+				</section> 		
+				
+				<section>
+				  <h3>Let's model FSM </h3>
+				  <pre>
+<code>
+
+  // state - 
+  sealed trait FSMSignal
+  case object RedSignal extends FSMSignal
+  case object YellowSignal extends FSMSignal
+  case object GreenSignal extends FSMSignal
+
+  // data  
+  case class SignalColorData
+
+  // event
+  case object ChangeSignal
+  case object RetainSignal
+
+</code>				  
+				  </pre>
+				</section>
+				
+				<section>
+				  <h3> Actor Code </h3>
+				  <pre>
+<code>
+class SignalChangeFSMActor extends Actor with FSM[FSMSignal, SignalColorData] {
+
+  // initial state of FSM
+  startWith(RedSignal, SignalColorData())
+
+  when(RedSignal) {
+    case Event(ChangeSignal, _) => goto(YellowSignal)
+    case Event(RetainSignal, _) => stay
+  }
+
+  when(YellowSignal) {
+    case Event(ChangeSignal, _) => goto(GreenSignal)
+    case Event(RetainSignal, _) => stay
+  }
+</code>				  
+				  </pre>
+				</section>
+				
+				<section>
+				<h3>Contd ...</h3>
+				<pre>
+<code>
+  when(GreenSignal) {
+    case Event(ChangeSignal, _) => goto(RedSignal)
+    case Event(RetainSignal, _) => stay
+  }
+
+  onTransition {
+    case RedSignal -> YellowSignal => 
+	println("Changing from red to yellow signal - get ready to go")
+    case YellowSignal -> GreenSignal =>
+	println("Changing from yellow to green signal - wroooom")
+    case GreenSignal -> RedSignal =>
+	println("Changing from green to red signal - stop !!! :(")
+  }
+
+  initialize
+}
+
+</code>				
+				</pre>    
+				</section>   						
+        
+        <section>
+          <h3>Unit testing FSM actors with </h3>
+          <pre>
+<code>
+class FSMActorTest(as: ActorSystem) extends TestKit(as)
+  with ImplicitSender
+  with WordSpecLike
+  with Matchers
+  with BeforeAndAfterAll {
+  // all our test cases
+}
+</code>          
+          </pre>
+        </section>
+        
+        <section>
+	<h3>Contd</h3>
+        <pre>
+<code>
+  val fsmRef = TestFSMRef(new SignalChangeFSMActor)
+  "Our signal emulating FSMActor" must {
+    "be red at initial stage " in {
+      assert(fsmRef.stateName == RedSignal)
+      assert(fsmRef.stateData == SignalColorData())
+    }
+    "change to yellow after AlternateColour event occured " in {
+      fsmRef ! ChangeSignal // send an event to FSM
+      assert(fsmRef.stateName == YellowSignal)
+      assert(fsmRef.stateData == SignalColorData())
+    }
+    "change to green after AlternateColour event occured" in {
+      fsmRef ! ChangeSignal
+      assert(fsmRef.stateName == GreenSignal)
+      assert(fsmRef.stateData == SignalColorData())
+    }
+    "retain should not change the fsm state" in {
+      fsmRef ! RetainSignal
+      assert(fsmRef.stateName == GreenSignal)
+      assert(fsmRef.stateData == SignalColorData())
+    }
+  }
+</code>  
+        </pre>
+        </section>
+        	
+	<section>
+	<h3>Over to Demo !!</h3>
+	</section>
+        <section>
+          <h3>Session takeaway</h3>
+          <ul>
+            <li>Code :- https://github.com/prassee/FSMExperiment</li>
+          </ul>
+        </section>
+ 
+<!--       
+        <section>
+          <h3>how I made this presentation ?</h3>
+          <p>
+          <ul>
+            <li>HTML 5</li>
+            <li>CSS 3</li>          
+            <li>Presentation :- reveal.js</li>
+            <li>Images courtesy :- google image search :) </li>
+          </ul>
+          </p>
+          <p>
+          This presentation is <b>CCL licensed</b> - <i>feel free to modify </i>
+          </p>
+          <p>
+          <img src="http://i.creativecommons.org/l/by/3.0/88x31.png/bmi_orig_img/88x31.png">
+          </p>
+        </section>
+-->
+        
+				<section>
+				  <h1> Thanks :)</h1>
+				</section>
+
+			</div>
+
+		</div>
+
+		<script src="js/reveal.min.js"></script>
+  
+		<script>
+			Reveal.initialize({
+				controls: false,
+				progress: true,
+				history: true,
+				center: true,
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'linear' // default/cube/page/concave/zoom/linear/fade/none
+			});
+		</script>
+
+	</body>
+</html>
